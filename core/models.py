@@ -32,10 +32,12 @@ class List(models.Model):
     ListOwnerState = models.CharField("Owner's Confirmation State",max_length=100)
     ListOwnerPrvdr = models.CharField("Owner's Provider",max_length=100)
     ListOwnerLink = models.CharField("Owner's Provider Link",max_length=150)
-
-
+    ListIsPrivate = models.BooleanField("This list is Private")
+    ListIsHidden = models.BooleanField("This list is Hidden")
+    
     class Meta:
         ordering = ["ListOwner"]
+        
         
     def __unicode__(self):
         return self.ListName
@@ -45,12 +47,12 @@ class List(models.Model):
 # -------------
 class Item(models.Model):
 
-    list = models.ForeignKey(List)
+    list = models.ForeignKey('List') 
     content = models.TextField()
     
     ItemMarked = models.BooleanField()
     ItemLocked = models.BooleanField()
-    #ItemPubDate = models.DateTimeField("Date Item Published")
+    ItemDueDate = models.DateField("Item Due Date",null=True)
     
     ## Item Done infos
     ItemDone = models.BooleanField()
@@ -65,7 +67,7 @@ class Item(models.Model):
     ItemOwnerPrvdr = models.CharField("Owner's Provider",max_length=100)
     ItemOwnerAvtr = models.CharField("Owner's Provider Avatar",max_length=150)
     ItemOwnerLink = models.CharField("Owner's Provider Link",max_length=150)
-    
+
     class Meta:
         ordering = ["ItemOwner","ItemOwnerState","-ItemMarked","ItemDone"]
 

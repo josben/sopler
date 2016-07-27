@@ -12,9 +12,14 @@ from django.shortcuts import get_object_or_404
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.template.defaultfilters import slugify
+from django.contrib.auth.models import User
 
 # Sopler Models
 from core.models import List, Item, Comment
+
+# Social Friends Finder (Models, Utils)
+from social_friends_finder.models import SocialFriendList
+from social_friends_finder.utils import setting
 
 # Allauth Models
 import allauth.socialaccount.models
@@ -22,17 +27,78 @@ import allauth.socialaccount.models
 # Favit Models
 from favit.models import Favorite
 
+#################################################
+# Config
+#################################################
+
 pages_dir = "pages/"
 
-class ViewIndexPage(ListView):
+if setting("SOCIAL_FRIENDS_USING_ALLAUTH", False):
+    USING_ALLAUTH = True
+else:
+    USING_ALLAUTH = False
+    
+REDIRECT_IF_NO_ACCOUNT = setting('SF_REDIRECT_IF_NO_SOCIAL_ACCOUNT_FOUND', False)
+REDIRECT_URL = setting('SF_REDIRECT_URL', "/")
+
+#################################################
+
+class FriendListView(ListView):
+  
     model = List
     template_name = pages_dir + "index.html"
+    
+    def get(self, request, provider=None):
+
+        if request.user.is_anonymous() :
+	  self.social_auths = ""
+	  self.social_friend_lists = []
+	  self.social_user_lists = []
+	  self.social_friend_lists = SocialFriendList.objects.get_or_create_with_social_auths(self.social_auths)
+	  return super(FriendListView, self).get(request)
 	
+	else:
+	  if USING_ALLAUTH:
+	      self.social_auths = request.user.socialaccount_set.all()
+	  else:
+	      self.social_auths = request.user.social_auth.all() 
+	  self.social_friend_lists = []
+	  self.social_user_lists = []
+	  # for each social network, get or create social_friend_list
+	  self.social_friend_lists = SocialFriendList.objects.get_or_create_with_social_auths(self.social_auths)
+	  return super(FriendListView, self).get(request)
+      
+    def get_context_data(self, **kwargs):
+        context = super(FriendListView, self).get_context_data(**kwargs)
 
+        friends = []
+        for friend_list in self.social_friend_lists:
+            fs = friend_list.existing_social_friends()
+            for f in fs:
+                friends.append(f)
+
+        # Print Friends
+        context['friends'] = friends
+        
+        # Print All users
+	context['users'] = User.objects.all()
+	
+	# Print All lists
+	model = List
+	context['lists'] = List.objects.all()
+
+        connected_providers = []
+        for sa in self.social_auths:
+            connected_providers.append(sa.provider)
+        context['connected_providers'] = connected_providers
+
+        return context
+      
+      
 class ViewProfilePage(TemplateView):
-    template_name = pages_dir + "profile.html"
-
-
+    template_name = pages_dir + "dosignin.html"
+    
+    
 class ViewList(DetailView):
     model = List
     template_name = pages_dir + "sidepanel.html"
@@ -40,8 +106,10 @@ class ViewList(DetailView):
     def get_context_data(self, **kwargs):
       context = super(ViewList, self).get_context_data(**kwargs)
       context['lists'] = List.objects.all()
+      context['users'] = User.objects.all()
       return context
-
+    
+    
 #################################################
 # Create A New List
 #################################################
@@ -91,13 +159,34 @@ def AddList(request):
 	  	  pass
 
     req = request.POST['ListName'].encode('utf-8')
+    
+    # Allow authenticated users only
     ListAuthOnly = request.POST.get('ListAuthOnly')
-
     if ListAuthOnly: 
         ListAuthOnly = True
+        ListIsPrivate = False
+        ListIsHidden = False
     else:
         ListAuthOnly = False
-
+        
+    #Set this list as private
+    ListIsPrivate = request.POST.get('ListIsPrivate') 
+    if ListIsPrivate: 
+        ListIsPrivate = True
+        ListAuthOnly = False
+        ListIsHidden = False
+    else:
+        ListIsPrivate = False
+        
+    # Set this list as hidden
+    ListIsHidden = request.POST.get('ListIsHidden') 
+    if ListIsHidden: 
+        ListIsHidden = True
+        ListAuthOnly = False
+        ListIsPrivate = False
+    else:
+        ListIsHidden = False
+        
     now = time.time()
     sha256 = hashlib.sha256()
     sha256.update(req)
@@ -116,6 +205,8 @@ def AddList(request):
 	ListName = req,
 	slug = slugify(CryptLink), 
 	ListAuthOnly = ListAuthOnly, 
+	ListIsPrivate = ListIsPrivate,
+	ListIsHidden = ListIsHidden,
 	ListOwner = ListOwner, 
         ListOwnerFN = ListOwnerFN,  
         ListOwnerLN = ListOwnerLN,
@@ -130,7 +221,55 @@ def AddList(request):
     list = get_object_or_404(List, slug=slugify(CryptLink))
     return HttpResponseRedirect('/lists/' + list.slug)
   
+
+#################################################
+# Set List as Private.
+#################################################
+
+def SetItPrivate(request, slug):
+    p = get_object_or_404(List, slug=slug)
+    if p.ListIsPrivate: 
+      p.ListIsPrivate = False
+    else:
+      p.ListIsPrivate = True
+      p.ListAuthOnly = False
+      p.ListIsHidden = False
+    p.save()
+    
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
   
+#################################################
+# Set List as Hidden.
+#################################################
+
+def SetItHidden(request, slug):
+    p = get_object_or_404(List, slug=slug)
+    if p.ListIsHidden: 
+      p.ListIsHidden = False
+    else:
+      p.ListIsHidden = True
+      p.ListAuthOnly = False
+      p.ListIsPrivate = False
+    p.save()
+    
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
+
+#################################################
+# Allow authenticated users only. 
+#################################################
+
+def SetAuthOnly(request, slug):
+    p = get_object_or_404(List, slug=slug)
+    if p.ListAuthOnly: 
+      p.ListAuthOnly = False
+    else:
+      p.ListAuthOnly = True
+      p.ListIsHidden = False
+      p.ListIsPrivate = False
+    p.save()
+    
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
+
 #################################################
 # Delete List
 #################################################
@@ -150,7 +289,7 @@ def DeletePreviousList(request, slug):
     p = get_object_or_404(List, slug=slug)
     p.delete()
     
-    return HttpResponseRedirect('/')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
 
 
 #################################################
@@ -206,7 +345,6 @@ def AddNewComment(request, slug):
 # Delete Comment
 #################################################
 
-
 def DeleteComment(request, slug):
     list = get_object_or_404(List, slug=slug)
     p = get_object_or_404(Comment, pk=int(request.POST['comment_pk']))
@@ -256,7 +394,7 @@ def AddNewItem(request, slug):
                   ItemOwnerLN = ""
                   ItemOwnerLink = "https://plus.google.com/" + account.extra_data['id'] 
 		  ItemOwnerState = "confirmed"
-		  ItemOwnerAvtr = "https://plus.google.com/s2/photos/profile/" + account.extra_data['id'] + "?sz=100"
+		  ItemOwnerAvtr = account.extra_data['picture']
 		  
 	  elif ItemOwnerPrvdr == "persona":
 	    	  ItemOwner = account.user
@@ -296,6 +434,7 @@ def AddNewItem(request, slug):
 #################################################
 # Check item
 #################################################
+
 def CheckItem(request, slug):
     list = get_object_or_404(List, slug=slug)
     p = get_object_or_404(Item, pk=int(request.POST['item_pk']))
@@ -334,73 +473,254 @@ def CheckItem(request, slug):
 #################################################
 # Uncheck -already checked- item
 #################################################
+
 def UnCheckItem(request, slug):
     list = get_object_or_404(List, slug=slug)
     p = get_object_or_404(Item, pk=int(request.POST['item_pk']))
-    if request.user.is_anonymous():
-       if p.WhoDone == request.POST.get('ItemOwner'):
-          p.ItemDone = False
-          p.WhoDone = ""
-       else :
-          p.ItemDone = False
-
-    else:
-
-       if p.WhoDone == request.user.first_name + " " + request.user.last_name or p.ItemOwnerFN + " " + p.ItemOwnerLN == request.user.first_name + " " + request.user.last_name :
-          p.ItemDone = False
-          p.WhoDone = ""
-       else :
-          p.ItemDone = False
+    
+    p.ItemDone = False
+    p.WhoDone = ""
+    p.ItemDueDate = None
     p.save()
+    
+    return HttpResponseRedirect(reverse('sopler:list', args=(list.slug,)))
 
+#################################################
+# Edit an item
+#################################################
+
+def EditItem(request, slug):
+    list = get_object_or_404(List, slug=slug)
+    p = get_object_or_404(Item, pk=int(request.POST['item_pk']))
+    
+    p.content = request.POST['EditContents']
+    p.save()
+    
+    return HttpResponseRedirect(reverse('sopler:list', args=(list.slug,)))
+
+#################################################
+# Set Due Date to item
+#################################################
+
+def SetItemDueDate(request, slug):
+    list = get_object_or_404(List, slug=slug)
+    p = get_object_or_404(Item, pk=int(request.POST['item_pk']))
+    
+    p.ItemDueDate = request.POST['SetDueDate']
+    p.save()
+    
     return HttpResponseRedirect(reverse('sopler:list', args=(list.slug,)))
 
 #################################################
 # Delete Item From List
 #################################################
+
 def DeleteItem(request, slug):
     list = get_object_or_404(List, slug=slug)
     p = get_object_or_404(Item, pk=int(request.POST['item_pk']))
+    
     if p.ItemLocked == True : 
        pass
+     
+    elif p.ItemOwnerState == "non-confirmed":
+	p.ItemDone = False
+	p.delete()
+	
     else:
-       p.ItemDone = False
-       p.delete()
-    
+       if request.user.is_authenticated():
+	for account in request.user.socialaccount_set.all():
+          ItemOwnerPrvdr = account.provider
+          
+          if ItemOwnerPrvdr == "facebook": 
+	    if p.ItemOwner == account.extra_data['username'] or list.ListOwner == account.extra_data['username']:
+	      p.ItemDone = False
+	      p.delete()
+	      
+	  elif ItemOwnerPrvdr == "twitter":
+	    if p.ItemOwner == account.extra_data['screen_name'] or list.ListOwner == account.extra_data['screen_name']:
+	      p.ItemDone = False
+	      p.delete()
+	      
+	  elif ItemOwnerPrvdr == "google":
+	    if p.ItemOwner == account.extra_data['name'] or list.ListOwner == account.extra_data['name']:
+	      p.ItemDone = False
+	      p.delete()
+	      
+	  elif ItemOwnerPrvdr == "persona":
+	    if p.ItemOwner == account.user.username or list.ListOwner == account.user.username:
+	      p.ItemDone = False
+	      p.delete()
+	  else:
+	    pass
+	else:
+	  pass
+      
     return HttpResponseRedirect(reverse('sopler:list', args=(list.slug,)))
-
-
+  
 #################################################
 # Mark item, as important
 #################################################
+
 def MarkItem(request, slug):
     list = get_object_or_404(List, slug=slug)
     p = get_object_or_404(Item, pk=int(request.POST['item_pk']))
-    if p.ItemLocked == False : 
-       if p.ItemMarked == True : 
-          p.ItemMarked = False 
-       else:
-          p.ItemMarked = True 
+    list = get_object_or_404(List, slug=slug)
+			  
+    if request.user.is_authenticated():
+      
+      if p.ItemOwnerState == "non-confirmed":
+	if p.ItemLocked == False :
+	  if p.ItemMarked == True : 
+	      p.ItemMarked = False 
+	  else:
+	      p.ItemMarked = True 
+	else:
+	  if p.ItemMarked == True :
+	      pass
+	  else:
+	      pass
+	p.save()
+
+      else:
+	for account in request.user.socialaccount_set.all():
+	  ItemOwnerPrvdr = account.provider
+	  
+	  if ItemOwnerPrvdr == "facebook": 
+	    if p.ItemOwner == account.extra_data['username'] or list.ListOwner == account.extra_data['username'] :
+	      if p.ItemLocked == False :
+		if p.ItemMarked == True : 
+		    p.ItemMarked = False 
+		else:
+		    p.ItemMarked = True 
+	      else:
+		if p.ItemMarked == True :
+		    pass
+		else:
+		    pass
+	      p.save()
+	      
+	  elif ItemOwnerPrvdr == "twitter":
+	    if p.ItemOwner == account.extra_data['screen_name'] or list.ListOwner == account.extra_data['screen_name']:
+	      if p.ItemLocked == False :
+		if p.ItemMarked == True : 
+		    p.ItemMarked = False 
+		else:
+		    p.ItemMarked = True 
+	      else:
+		if p.ItemMarked == True :
+		    pass
+		else:
+		    pass
+	      p.save()
+	      
+	  elif ItemOwnerPrvdr == "google":
+	    if p.ItemOwner == account.extra_data['name'] or list.ListOwner == account.extra_data['name']:
+	      if p.ItemLocked == False : 
+		if p.ItemMarked == True : 
+		    p.ItemMarked = False 
+		else:
+		    p.ItemMarked = True 
+	      else:
+		if p.ItemMarked == True :
+		    pass
+		else:
+		    pass
+	      p.save()
+	      
+	  elif ItemOwnerPrvdr == "persona":
+	    if p.ItemOwner == account.user.username or list.ListOwner == account.user.username:
+	      if p.ItemLocked == False :
+		if p.ItemMarked == True : 
+		    p.ItemMarked = False 
+		else:
+		    p.ItemMarked = True 
+	      else:
+		if p.ItemMarked == True :
+		    pass
+		else:
+		    pass
+	      p.save()
+	  else:
+	    pass
     else:
-       if p.ItemMarked == True :
-          pass
-       else:
-          pass
-    p.save()
+      if p.ItemOwnerState == "non-confirmed":
+	if p.ItemLocked == False :
+	  if p.ItemMarked == True : 
+	      p.ItemMarked = False 
+	  else:
+	      p.ItemMarked = True 
+	else:
+	  if p.ItemMarked == True :
+	      pass
+	  else:
+	      pass
+	p.save()
+      else:
+	pass
 
     return HttpResponseRedirect(reverse('sopler:list', args=(list.slug,)))
 
 #################################################
 # Lock an item, as important
 #################################################
+
 def LockItem(request, slug):
     list = get_object_or_404(List, slug=slug)
     p = get_object_or_404(Item, pk=int(request.POST['item_pk']))
-    if p.ItemLocked == True :
-       p.ItemLocked  = False
+    
+    if request.user.is_authenticated():
+      if p.ItemOwnerState == "non-confirmed":
+	if p.ItemLocked == True :
+	  p.ItemLocked  = False
+	else:
+	  p.ItemLocked  = True
+	p.save()
+      else:
+	for account in request.user.socialaccount_set.all():
+	  ItemOwnerPrvdr = account.provider
+	  
+	  if ItemOwnerPrvdr == "facebook":
+	    if p.ItemOwner == account.extra_data['username'] or list.ListOwner == account.extra_data['username'] :
+	      if p.ItemLocked == True :
+		p.ItemLocked  = False
+	      else:
+		p.ItemLocked  = True
+	      p.save()
+	      
+	  elif ItemOwnerPrvdr == "twitter":
+	    if p.ItemOwner == account.extra_data['screen_name'] or list.ListOwner == account.extra_data['screen_name']:
+	      if p.ItemLocked == True :
+		p.ItemLocked  = False
+	      else:
+		p.ItemLocked  = True
+	      p.save()
+	      
+	  elif ItemOwnerPrvdr == "google":
+	    if p.ItemOwner == account.extra_data['name'] or list.ListOwner == account.extra_data['name']:
+	      if p.ItemLocked == True :
+		p.ItemLocked  = False
+	      else:
+		p.ItemLocked  = True
+	      p.save()
+	      
+	  elif ItemOwnerPrvdr == "persona":
+	    if p.ItemOwner == account.user.username or list.ListOwner == account.user.username:
+	      if p.ItemLocked == True :
+		p.ItemLocked  = False
+	      else:
+		p.ItemLocked  = True
+	      p.save()
+	  else:
+	    pass
     else:
-       p.ItemLocked  = True
-    p.save()
+      if p.ItemOwnerState == "non-confirmed":
+	if p.ItemLocked == True :
+	  p.ItemLocked  = False
+	else:
+	  p.ItemLocked  = True
+	p.save()
+      else:
+	pass
 
     return HttpResponseRedirect(reverse('sopler:list', args=(list.slug,)))
     
@@ -408,6 +728,7 @@ def LockItem(request, slug):
 #################################################
 # Favorite a list 
 #################################################  
+
 @login_required
 def favit(request,slug):
         
@@ -423,5 +744,5 @@ def favit(request,slug):
     else:
 	fav.delete()
     
-    return HttpResponseRedirect(reverse('sopler:list', args=(list.slug,)))
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
     

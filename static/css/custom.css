@@ -42,7 +42,7 @@ a:hover {
 
 /* Set the fixed height of the footer here */
 #footer {
-	background-color:rgba(0, 0, 0, 0.08);
+	background-color:rgba(0, 0, 0, 0.06);
 	border-top: 1px solid rgba(0, 0, 0, 0.04);
 	padding: 2em 0 2em;
 	position: relative;
@@ -78,6 +78,10 @@ a:hover {
 	font-size:15px;
 }
 
+.jumbotron p{
+font-size: 16px;
+}
+
 /**** Input styling*****/
 
 input {
@@ -90,6 +94,7 @@ input {
 
 .sign-up-input {
 	width: 100%;
+	max-width:25em;
 	height: 50px;
 	margin-bottom: 25px;
 	padding: 0 15px 2px;
@@ -200,15 +205,27 @@ input {
 	background: url("../list_images/classy_fabric.png") repeat scroll 0 0 #E3E0EF;
 }
 
+.nav > li {
+display: inline-block;
+white-space:nowrap;
+float:none;
+}
+
+.list-inline>li {
+padding-right:0px;
+}
+
 .navbar-default .navbar-text{
 	    color:#ffffff ;
-	    margin-right: 5px;
+	    margin-right: 0;
 	    margin-top: 20px;
 }
 .navbar-brand{
-	padding: 15px 7px;
+	padding: 13px 7px 7px;
 }
-
+.navbar > .container .navbar-brand, .navbar > .container-fluid .navbar-brand {
+    margin: 0 0 7px -15px;
+}
 /****Footer tweak for mobile*****/
 .dl-horizontal dt {
 	text-align:left;
@@ -226,12 +243,31 @@ input {
 }
 
 .hello img{
-	margin-top:16px;
-	margin-right:4px;
+	margin-top: -38px;
+	margin-right:10px;
 	 border-radius: 10px;
 	-moz-border-radius: 10px;
 	-khtml-border-radius: 10px;
 	-webkit-border-radius: 10px;
+}
+
+.sign-in-button {
+	  position: relative;
+	  vertical-align: top;
+	  width: 100%;
+	  height: 54px;
+	  padding: 0;
+	  font-size: 24px;
+	  color: white;
+	  text-align: center;
+	  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+	  background: #428BCA;
+	  border: 0;
+	  border-bottom: 2px solid #2A76B7;
+	  border-radius: 5px;
+	  cursor: pointer;
+	  -webkit-box-shadow: inset 0 -2px #2A76B7;
+	  box-shadow: inset 0 -2px #2A76B7;
 }
 
 .sign-up-button {
@@ -302,8 +338,7 @@ input {
 	min-width:15em;
 	display: block; 
 	width: 100%; 
-	background-color: rgba(0, 0, 0, 0.08);
-	border: 1px solid rgba(0, 0, 0, 0.04);
+	background-color: rgba(0, 0, 0, 0.06);
 	margin-top: 2.2em;
 	padding: 5px 20px; 
 	-moz-border-radius:15px; /* Firefox */
@@ -320,7 +355,30 @@ input {
 	text-align:center;
 }
 
+
 /******* List items (not comments - tbfixed ) ******/
+
+.list-group-item:first-child {
+    border-radius: 8px;
+}
+
+.list-group-item{
+background: #feffff; /* Old browsers */
+background: -moz-linear-gradient(top, #feffff 0%, #f2f2f2 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#feffff), color-stop(100%,#f2f2f2)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top, #feffff 0%,#f2f2f2 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top, #feffff 0%,#f2f2f2 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top, #feffff 0%,#f2f2f2 100%); /* IE10+ */
+background: linear-gradient(to bottom, #feffff 0%,#f2f2f2 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#feffff', endColorstr='#f2f2f2',GradientType=0 ); /* IE6-9 */
+box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.02);
+border-radius: 8px;
+}
+
+.list-group-item {
+    margin-bottom: 4px;
+}
+
 #comments { display: block; }
 #comments .cmmnt, ul .cmmnt, ul ul .cmmnt { margin-left: -40px; display: block; position: relative; padding-top:5px }
 #comments .cmmnt .avatar  {margin-bottom:10px; }
@@ -338,7 +396,6 @@ input {
   -o-transition: all 0.4s linear;
   transition: all 0.4s linear;
 }
-
 
 
 
@@ -369,10 +426,40 @@ background-color: #e3eef1;
 
 /*-------------Favorite Button-----------------*/
 
+.favhover{
+	font-weight:bold;
+	color:#3f85c2;
+	cursor: pointer;
+}
+
+.favhover:hover{
+	color:#2A6496;
+	text-decoration:none;
+}
+
 .favbutton{
 	box-shadow: 1px 1px #ccc;
 	float:right; 
-	margin:-10px -10px; 
+	margin:-10px 10px; 
+	width:40px; height:40px; 
+	background-image: -webkit-gradient(
+		linear,
+		left top,
+		left bottom,
+		color-stop(0, #F6F6F6),
+		color-stop(1, #DFDFDF)
+	);
+	background-image: -o-linear-gradient(bottom, #F6F6F6 0%, #DFDFDF 100%);
+	background-image: -moz-linear-gradient(bottom, #F6F6F6 0%, #DFDFDF 100%);
+	background-image: -webkit-linear-gradient(bottom, #F6F6F6 0%, #DFDFDF 100%);
+	background-image: -ms-linear-gradient(bottom, #F6F6F6 0%, #DFDFDF 100%);
+	background-image: linear-gradient(to bottom, #F6F6F6 0%, #DFDFDF 100%);
+}
+
+.cogbutton{
+	box-shadow: 1px 1px #ccc;
+	float:right; 
+	margin:-10px -5px; 
 	width:40px; height:40px; 
 	background-image: -webkit-gradient(
 		linear,
@@ -450,7 +537,14 @@ img.logo{
 
 .btn-primary.signin { 
     border-radius: 7px;
-    margin-top:13px;
+     margin-top: 0px;
+}
+
+@media (min-width:768px) {
+.btn-primary.signin { 
+    border-radius: 7px;
+    margin-top: -30px;
+	}
 }
 
 .btn .btn-success .add_item{
@@ -469,21 +563,135 @@ img.logo{
 	cursor: pointer;
 	z-index: 1;
 }
+.modal_icon{
+font-size:2.5em;
+}
+
+/* List item sign & modal buttons */
+.item_signs{
+	cursor: default;
+	border: 1px solid #dddddd;
+	margin-top:-11px;
+	color:white;
+}
+
+.item_signs.lock_sign{
+	font-size:19px;
+    padding: 0.57em 0.32em !important;
+	border: 1px solid #cfcfcf;
+	background-color:#eba400;
+}
+
+.item_signs.star_sign{
+	font-size: 17px;
+	padding: 0.70em 0.25em !important;
+	border:1px solid #cfcfcf;
+	background-color:#c0392b;
+}
+
+.mobile-menu-btns{
+
+	cursor:pointer;
+        font-size:13px;
+}
+
+.btn-tools{
+	cursor:pointer;
+	font-size:13px;
+	color: #FFFFFF;
+	border-radius:15px; 
+	margin: 15px;
+}
+.priority {
+    background:none;
+    background-color: #c45146;
+    color:#FFFFFF;
+}
+
+.priority:hover{
+	background-color: #b9473d;
+}
+
+.lock {
+    background:none;
+    background-color: #eca400;
+    color:#FFFFFF;
+}
+
+.lock:hover{
+	background-color: #df9b00;
+}
+
+.delete {
+    background:none;
+    background-color: #34495e;
+    color:#FFFFFF;
+}
+
+.delete:hover{
+	background-color: #2d4052;
+}
+
+.duedate {
+    background:none;
+    background-color: #14947c;
+    color:#FFFFFF;
+}
+
+.duedate:hover{
+	background-color: #128671;
+}
+
+.edit {
+    background:none;
+    background-color: #1a94d1;
+    color:#FFFFFF;
+}
+
+.edit:hover{
+	background-color: #188ac4;
+}
+
+.infos {
+    background:none;
+    background-color: #a86d53;
+    color:#FFFFFF;
+}
+
+.infos:hover{
+	background-color: #96614a;
+}
+
+.dates{
+	margin-left: 0.7em;
+}
+
+/*** Change check icon on hover***/
+
+.check-button:hover .fa-circle-o:before{
+    content:"\f05d";
+}
+
+/**** class close is also used in list icons****/
 .close {
+	opacity:0.35;
     font-size:1.5em;
     display:block;
-    width: 40px;
+    width: 30px;
     height: 40px;
     font-weight: bold;
 	cursor: pointer;
     z-index: 1;
 }
 
+.closeopacity{
+	opacity:0.4;
+}
+
 .close:hover {
 	color: #000000;
 	text-decoration: none;
-	opacity: 0.65;
-	filter: alpha(opacity=85);
+
 	cursor: pointer;
 }
 
@@ -603,6 +811,16 @@ img.logo{
     	max-width:48em;
 }
 
+.box-titles{
+
+margin-left:10px
+}
+
+.box-titles h2{
+font-size:20px;
+
+}
+
 .about-box{
 /**leave distance between sidepanel boxes    margin-bottom: 7px; **/
 	min-width:15em;
@@ -634,10 +852,83 @@ img.logo{
 	  margin-right: 10px;
 }
 
+.about-box .about-profile-pic {
+	  margin-top:10px;
+	  margin-left: 10px;
+	  float: left;
+	  margin-right: 10px;
+}
+
+.profile-counters{
+	color:#717171;
+	font-size:20px;
+	margin-top:20px;
+	padding-right:20px;	
+}
+
+.cogdropdown{
+float:right;
+}
+
+.cogdropdown-menu{
+margin-top:8px;
+left:-13em;
+min-width:240px;
+}
+
+.cogdropdown-menu-dashboard{
+margin-top:-10px;
+}
+
+.coglist{
+    cursor: pointer;
+
+    text-decoration: none;
+}
+
+.coglist a {
+    font-size:14px;
+    clear:both;
+    color: #262626;
+    text-decoration: none;
+    padding: 3px 13px;
+    white-space: nowrap;
+}
+
+.dashboard{
+ margin-top:10px;
+}
+
+.extra-option{
+margin-top:6px !important;
+}
+
+.btn-danger {
+	font-size:13px;
+    background-color: #c45146;
+    border-color: #D43F3A;
+    color: #FFFFFF;
+    border-radius:15px; 
+}
+
+.btn-danger:hover{
+background-color: #b9473d;
+}
+
+.badge{
+color:#FFF;
+background-color:#666;
+padding: 3px 6px;
+}
 .about-box .popover {
 	  display: block;
 	  position: static;
 
+}
+
+.nobackground{
+background-color: #FFFFFF;
+border-radius: 0;
 }
 .about-box .popover .popover-title {
 	  font-weight: 600;
@@ -674,6 +965,7 @@ img.logo{
 	border-radius:0px;
 }
 
+
 #boxes .popover-title {
 	text-align:center;
 	text-shadow: 2px 2px 2px #dddddd;
@@ -703,6 +995,27 @@ img.logo{
 	border-radius: 50%;
 }
 
+.red-heart{
+ color:#b71a1a;
+}
+
+.green-list{
+ color:#2e8736;
+}
+
+.blue-friends{
+ color:#3879b5;
+}
+
+/**** Friend images*****/
+
+.friend_img{
+	margin-top:4px;
+}
+.friend_img:hover{
+	cursor:pointer;
+}
+
 /****** Index.html ./Sopler *****/
 .logocolor{
 	color:#499ef7;
@@ -723,7 +1036,7 @@ img.logo{
 /********** Item buttons (tbfixed) **********/
 /*** this one is blue*****/
 .btn-item_undone { 
-        padding-left: 3%;
+        padding: 5px 0 5px 2%;
         margin-bottom:10px;
         text-align:left; 
 	border:2px solid;
@@ -760,7 +1073,7 @@ img.logo{
 }
 /*** this one is green*****/
 .btn-item_done { 
-        padding-left: 3%; 
+        padding: 5px 0 5px 2%;
         margin-bottom:10px; 
         text-align:left; 
 	opacity:0.65;

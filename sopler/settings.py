@@ -4,7 +4,7 @@
 import os.path
 PROJECT_DIR = os.path.normpath(os.path.dirname(os.path.abspath(__file__)))
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 SESSION_SAVE_EVERY_REQUEST = True
 #Set "True" if all non-SSL requests should be permanently redirected to SSL.
@@ -21,6 +21,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 # Enable the browser’s XSS filtering protections.
 SECURE_BROWSER_XSS_FILTER = True
 
+SOCIAL_FRIENDS_USING_ALLAUTH = True
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -40,6 +41,8 @@ DATABASES = {
         'PORT': '',                      # Set to empty string for default.
     }
 }
+
+
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
@@ -123,6 +126,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.contrib.messages.context_processors.messages",
     #"allauth.account.context_processors.account",
     "allauth.socialaccount.context_processors.socialaccount",
+    'django.core.context_processors.request',
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -170,17 +174,24 @@ INSTALLED_APPS = (
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'allauth.socialaccount.providers.facebook',
-    'allauth.socialaccount.providers.google',
+    # Available Social Account Providers
     'allauth.socialaccount.providers.twitter',
     'allauth.socialaccount.providers.persona',
-    #'allauth.socialaccount.providers.openid',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.facebook',
+     #'allauth.socialaccount.providers.openid',
     'core',
-    # Extra Security Features
+    # Extra Security Features.
     'djangosecure',
-    # Uncomment for data migration 
-    #'south',
+    # Data migration.
+    'south',
+    # Faving and unfaving lists.
     'favit',
+    # Webservice API framework for Django.
+    #'tastypie',
+    # Fetches your friends from different social-networks.
+    'social_friends_finder',
+    'embed_video',
 )
 
 # A sample logging configuration. The only tangible logging
